@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chronic Kidney Disease - KMeans Clustering</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid rgba(74, 158, 255, 0.2);
+            position: relative;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #4a9eff 0%, #2d7dd2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1.1rem;
+            font-weight: 300;
+        }
+
+        .info-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: rgba(74, 158, 255, 0.1);
+            color: #4a9eff;
+            border: 1px solid #4a9eff;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .info-btn:hover {
+            background: rgba(74, 158, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
+        }
+
+        .card {
+            background: rgba(30, 30, 50, 0.6);
+            border: 1px solid rgba(74, 158, 255, 0.2);
+            border-radius: 16px;
+            padding: 2.5rem;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            color: #ffffff;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(74, 158, 255, 0.2);
+        }
+
+        .tab {
+            padding: 1rem 2rem;
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+            position: relative;
+        }
+
+        .tab:hover {
+            color: #4a9eff;
+        }
+
+        .tab.active {
+            color: #4a9eff;
+            border-bottom: 2px solid #4a9eff;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.75rem;
+            color: #b0b0b0;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(20, 20, 40, 0.8);
+            border: 1px solid rgba(74, 158, 255, 0.3);
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #4a9eff;
+            box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #4a9eff 0%, #2d7dd2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(74, 158, 255, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 158, 255, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(74, 158, 255, 0.1);
+            border: 1px solid rgba(74, 158, 255, 0.3);
+            border-radius: 12px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result h3 {
+            color: #4a9eff;
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(74, 158, 255, 0.1);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            color: #b0b0b0;
+            font-weight: 500;
+        }
+
+        .result-value {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .cluster-info {
+            margin-top: 1rem;
+        }
+
+        .cluster-card {
+            background: rgba(40, 40, 60, 0.6);
+            border: 1px solid rgba(74, 158, 255, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .cluster-card:hover {
+            border-color: rgba(74, 158, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .cluster-card h4 {
+            color: #4a9eff;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .cluster-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .cluster-stat {
+            color: #b0b0b0;
+            padding: 0.5rem;
+            background: rgba(74, 158, 255, 0.05);
+            border-radius: 6px;
+        }
+
+        .info-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .info-modal.show {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .info-content {
+            background: rgba(30, 30, 50, 0.95);
+            border: 1px solid rgba(74, 158, 255, 0.3);
+            border-radius: 16px;
+            padding: 2.5rem;
+            max-width: 650px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .info-content h3 {
+            color: #4a9eff;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .info-content p {
+            margin-bottom: 1rem;
+            color: #b0b0b0;
+            line-height: 1.8;
+        }
+
+        .info-content strong {
+            color: #4a9eff;
+            font-weight: 600;
+        }
+
+        .info-content a {
+            color: #4a9eff;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .info-content a:hover {
+            color: #2d7dd2;
+            text-decoration: underline;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: #4a9eff;
+            transform: rotate(90deg);
+        }
+
+        .error {
+            background: rgba(255, 82, 82, 0.1);
+            border: 1px solid rgba(255, 82, 82, 0.3);
+            color: #ff5252;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid rgba(74, 158, 255, 0.1);
+            border-top: 3px solid #4a9eff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            .info-btn {
+                position: relative;
+                margin-top: 1rem;
+            }
+
+            .cluster-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Analisis Penyakit Ginjal Kronis</h1>
+            <p class="subtitle">KMeans Clustering untuk Deteksi Dini</p>
+            <button class="info-btn" id="infoBtn">Informasi Dataset</button>
+        </header>
+
+        <div class="main-content">
+            <div class="card">
+                <div class="tabs">
+                    <button class="tab active" data-tab="prediction">Prediksi</button>
+                    <button class="tab" data-tab="analysis">Analisis Cluster</button>
+                    <button class="tab" data-tab="visualization">Visualisasi</button>
+                </div>
+
+                <div class="tab-content active" id="prediction">
+                    <h2>Form Prediksi</h2>
+                    <p style="color: #888; margin-bottom: 1.5rem; font-size: 0.9rem;">Masukkan nilai medis pasien untuk memprediksi cluster penyakit ginjal</p>
+                    <form id="predictionForm">
+                        <div class="form-group">
+                            <label for="serum_creatinine">Serum Kreatinin (mg/dL)</label>
+                            <input type="number" id="serum_creatinine" name="serum_creatinine" 
+                                   step="0.1" min="0" required placeholder="Contoh: 1.2">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="blood_urea">Urea Darah (mg/dL)</label>
+                            <input type="number" id="blood_urea" name="blood_urea" 
+                                   step="0.1" min="0" required placeholder="Contoh: 36.0">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="hemoglobin">Hemoglobin (g/dL)</label>
+                            <input type="number" id="hemoglobin" name="hemoglobin" 
+                                   step="0.1" min="0" required placeholder="Contoh: 15.4">
+                        </div>
+
+                        <button type="submit" class="btn">Prediksi Cluster</button>
+                    </form>
+
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                        <p>Memproses...</p>
+                    </div>
+
+                    <div class="error" id="error"></div>
+
+                    <div class="result" id="result">
+                        <h3>Hasil Prediksi</h3>
+                        <div class="result-item">
+                            <span class="result-label">Cluster:</span>
+                            <span class="result-value" id="clusterValue">-</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Interpretasi:</span>
+                            <span class="result-value" id="clusterInterpretation" style="font-size: 0.9rem; color: #4a9eff;">-</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Ukuran Cluster:</span>
+                            <span class="result-value" id="clusterSize">-</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Rata-rata Serum Kreatinin:</span>
+                            <span class="result-value" id="avgCreatinine">-</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Rata-rata Urea Darah:</span>
+                            <span class="result-value" id="avgUrea">-</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Rata-rata Hemoglobin:</span>
+                            <span class="result-value" id="avgHemoglobin">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="analysis">
+                    <h2>Informasi Cluster</h2>
+                    <p style="color: #888; margin-bottom: 1.5rem; font-size: 0.9rem;">Analisis statistik dari setiap cluster yang terbentuk</p>
+                    <div class="cluster-info" id="clusterInfo">
+                        <p>Memuat informasi cluster...</p>
+                    </div>
+
+                    <div style="margin-top: 3rem;">
+                        <h3 style="color: #4a9eff; margin-bottom: 1rem; font-size: 1.1rem;">Evaluasi Model</h3>
+                        <p style="color: #888; margin-bottom: 1rem; font-size: 0.9rem;">Metrik evaluasi kualitas clustering</p>
+                        <div class="evaluation-info" id="evaluationInfo">
+                            <p>Memuat evaluasi model...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="visualization">
+                    <h2>Visualisasi</h2>
+                    <p style="color: #888; margin-bottom: 1.5rem; font-size: 0.9rem;">Grafik visualisasi hasil clustering</p>
+                    
+                    <div style="margin-bottom: 2rem;">
+                        <h3 style="color: #4a9eff; margin-bottom: 1rem; font-size: 1.1rem;">Metode Elbow</h3>
+                        <p style="color: #888; margin-bottom: 1rem; font-size: 0.9rem;">Grafik elbow menunjukkan penurunan inertia untuk menentukan jumlah cluster optimal (k=3)</p>
+                        <div style="background: rgba(20, 20, 40, 0.8); border: 1px solid rgba(74, 158, 255, 0.2); border-radius: 12px; padding: 1rem;">
+                            <img src="/results/elbow_method.png" alt="Elbow Method" style="width: 100%; border-radius: 8px;">
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 style="color: #4a9eff; margin-bottom: 1rem; font-size: 1.1rem;">Visualisasi 3D Cluster</h3>
+                        <p style="color: #888; margin-bottom: 1rem; font-size: 0.9rem;">Distribusi data dalam ruang 3D berdasarkan 3 fitur utama</p>
+                        <div style="background: rgba(20, 20, 40, 0.8); border: 1px solid rgba(74, 158, 255, 0.2); border-radius: 12px; padding: 1rem;">
+                            <img src="/results/clusters_3d.png" alt="3D Cluster Visualization" style="width: 100%; border-radius: 8px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-modal" id="infoModal">
+        <div class="info-content">
+            <button class="close-btn" id="closeBtn">&times;</button>
+            <h3>Informasi Dataset</h3>
+            <p><strong>Dataset:</strong> Chronic Kidney Disease</p>
+            <p><strong>Sumber:</strong> UCI Machine Learning Repository</p>
+            <p><strong>ID:</strong> 336</p>
+            <p><strong>Link:</strong> <a href="https://archive.ics.uci.edu/dataset/336/chronic+kidney+disease" target="_blank">https://archive.ics.uci.edu/dataset/336/chronic+kidney+disease</a></p>
+            <p><strong>Deskripsi:</strong> Dataset ini digunakan untuk memprediksi penyakit ginjal kronis dan menganalisis pola serta faktor yang berkontribusi pada CKD.</p>
+            <p><strong>Jumlah Data:</strong> 400 pasien</p>
+            <p><strong>Atribut:</strong> 25 (24 prediktif + 1 kelas)</p>
+            <p><strong>Fitur:</strong> Usia, Tekanan Darah, Gravitasi Spesifik, Albumin, Gula, Sel Darah Merah, Sel Pus, Gumpalan Sel Pus, Bakteri, Gula Darah Acak, Urea Darah, Kreatinin Serum, Natrium, Kalium, Hemoglobin, Volume Sel Terkemas, Jumlah Sel Darah Putih, Jumlah Sel Darah Merah, Hipertensi, Diabetes Melitus, Penyakit Arteri Koroner, Nafsu Makan, Edema Pedal, Anemia, Kelas</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab switching
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+
+                    const tabId = this.getAttribute('data-tab');
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(tabId).classList.add('active');
+
+                    // Load cluster info when analysis tab is clicked
+                    if (tabId === 'analysis') {
+                        loadClusterInfo();
+                        loadModelEvaluation();
+                    }
+                });
+            });
+
+            // Info modal
+            const infoBtn = document.getElementById('infoBtn');
+            const infoModal = document.getElementById('infoModal');
+            const closeBtn = document.getElementById('closeBtn');
+
+            infoBtn.addEventListener('click', function() {
+                infoModal.classList.add('show');
+            });
+
+            closeBtn.addEventListener('click', function() {
+                infoModal.classList.remove('show');
+            });
+
+            infoModal.addEventListener('click', function(e) {
+                if (e.target === infoModal) {
+                    infoModal.classList.remove('show');
+                }
+            });
+
+            // Handle form submission
+            document.getElementById('predictionForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const loading = document.getElementById('loading');
+                const error = document.getElementById('error');
+                const result = document.getElementById('result');
+
+                loading.classList.add('show');
+                error.classList.remove('show');
+                result.classList.remove('show');
+
+                const formData = new FormData(this);
+
+                fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    loading.classList.remove('show');
+                    
+                    if (data.success) {
+                        document.getElementById('clusterValue').textContent = data.result.cluster;
+                        document.getElementById('clusterInterpretation').textContent = data.result.interpretation;
+                        document.getElementById('clusterSize').textContent = data.result.cluster_size;
+                        document.getElementById('avgCreatinine').textContent = data.result.serum_creatinine_mean.toFixed(2);
+                        document.getElementById('avgUrea').textContent = data.result.blood_urea_mean.toFixed(2);
+                        document.getElementById('avgHemoglobin').textContent = data.result.hemoglobin_mean.toFixed(2);
+                        result.classList.add('show');
+                    } else {
+                        error.textContent = data.error;
+                        error.classList.add('show');
+                    }
+                })
+                .catch(error => {
+                    loading.classList.remove('show');
+                    error.textContent = 'Error: ' + error.message;
+                    error.classList.add('show');
+                });
+            });
+        });
+
+        function loadClusterInfo() {
+            fetch('/cluster_info')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayClusterInfo(data.clusters);
+                    } else {
+                        document.getElementById('clusterInfo').innerHTML = 
+                            '<p style="color: #ff5252;">Error memuat informasi cluster</p>';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('clusterInfo').innerHTML = 
+                        '<p style="color: #ff5252;">Error: ' + error.message + '</p>';
+                });
+        }
+
+        function displayClusterInfo(clusters) {
+            const container = document.getElementById('clusterInfo');
+            container.innerHTML = '';
+
+            clusters.forEach(cluster => {
+                const card = document.createElement('div');
+                card.className = 'cluster-card';
+                card.innerHTML = `
+                    <h4>Cluster ${cluster.cluster}</h4>
+                    <p style="color: #4a9eff; margin-bottom: 0.5rem; font-size: 0.9rem;">${cluster.interpretation}</p>
+                    <div class="cluster-stats">
+                        <div class="cluster-stat">Ukuran: ${cluster.size}</div>
+                        <div class="cluster-stat">Rata-rata Kreatinin: ${cluster.serum_creatinine_mean.toFixed(2)}</div>
+                        <div class="cluster-stat">Rata-rata Urea: ${cluster.blood_urea_mean.toFixed(2)}</div>
+                        <div class="cluster-stat">Rata-rata Hemoglobin: ${cluster.hemoglobin_mean.toFixed(2)}</div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function loadModelEvaluation() {
+            fetch('/model_evaluation')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayModelEvaluation(data.evaluation);
+                    } else {
+                        document.getElementById('evaluationInfo').innerHTML =
+                            '<p style="color: #ff5252;">Error memuat evaluasi model</p>';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('evaluationInfo').innerHTML =
+                        '<p style="color: #ff5252;">Error: ' + error.message + '</p>';
+                });
+        }
+
+        function displayModelEvaluation(evaluation) {
+            const container = document.getElementById('evaluationInfo');
+            container.innerHTML = '';
+
+            // Internal Metrics Card
+            const internalCard = document.createElement('div');
+            internalCard.className = 'cluster-card';
+            internalCard.innerHTML = `
+                <h4>Metrik Evaluasi Internal</h4>
+                <div class="cluster-stats" style="grid-template-columns: 1fr;">
+                    <div class="cluster-stat">Silhouette Score: ${evaluation.internal_metrics.silhouette_score.toFixed(4)}</div>
+                    <div class="cluster-stat">Davies-Bouldin Index: ${evaluation.internal_metrics.davies_bouldin_index.toFixed(4)}</div>
+                    <div class="cluster-stat">Calinski-Harabasz Index: ${evaluation.internal_metrics.calinski_harabasz_index.toFixed(4)}</div>
+                </div>
+            `;
+            container.appendChild(internalCard);
+
+            // External Metrics Card
+            const externalCard = document.createElement('div');
+            externalCard.className = 'cluster-card';
+            externalCard.innerHTML = `
+                <h4>Metrik Evaluasi Eksternal</h4>
+                <div class="cluster-stats" style="grid-template-columns: 1fr;">
+                    <div class="cluster-stat">Adjusted Rand Index: ${evaluation.external_metrics.adjusted_rand_index.toFixed(4)}</div>
+                    <div class="cluster-stat">Normalized Mutual Information: ${evaluation.external_metrics.normalized_mutual_info.toFixed(4)}</div>
+                </div>
+            `;
+            container.appendChild(externalCard);
+
+            // Variance Analysis Card
+            const varianceCard = document.createElement('div');
+            varianceCard.className = 'cluster-card';
+            varianceCard.innerHTML = `
+                <h4>Analisis Varians</h4>
+                <div class="cluster-stats" style="grid-template-columns: 1fr;">
+                    <div class="cluster-stat">WCSS (Within-Cluster): ${evaluation.variance_analysis.wcss.toFixed(4)}</div>
+                    <div class="cluster-stat">BCSS (Between-Cluster): ${evaluation.variance_analysis.bcss.toFixed(4)}</div>
+                    <div class="cluster-stat">BCSS/TSS Ratio: ${(evaluation.variance_analysis.bcss_ratio * 100).toFixed(2)}%</div>
+                </div>
+            `;
+            container.appendChild(varianceCard);
+
+            // Inter-cluster Distances Card
+            const distanceCard = document.createElement('div');
+            distanceCard.className = 'cluster-card';
+            let distanceHTML = '<h4>Jarak Antar Cluster</h4><div class="cluster-stats" style="grid-template-columns: 1fr;">';
+            evaluation.inter_cluster_distances.forEach(dist => {
+                distanceHTML += `<div class="cluster-stat">Cluster ${dist.pair}: ${dist.distance.toFixed(4)}</div>`;
+            });
+            distanceHTML += '</div>';
+            distanceCard.innerHTML = distanceHTML;
+            container.appendChild(distanceCard);
+        }
+    </script>
+</body>
+</html>
